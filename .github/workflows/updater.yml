@@ -56,6 +56,12 @@ jobs:
           PROTOCOL=${{ matrix.batch }} ./updater.sh
           rm -r *.sh 
 
+      - name: Save generated files
+        uses: actions/upload-artifact@v3
+        with:
+          name: proxy-files-${{ matrix.batch }}
+          path: "*.txt"
+
   commit-and-push:
     needs: update-proxy
     runs-on: ubuntu-latest
@@ -63,6 +69,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+      
+      - name: Restore all generated files
+        uses: actions/download-artifact@v3
+        with:
+          pattern: "proxy-files-*"
 
       - name: Check for changes and commit
         id: auto-commit
@@ -72,15 +83,16 @@ jobs:
           git add .
           if git diff-index --quiet HEAD --; then
             echo "No changes to commit."
-            echo "changes_committed=false" >> $GITHUB_OUTPUT
+            echo "changes_committed=false" >> $GITHUB_ENV
           else
             KST_DATE=$(TZ="Asia/Seoul" date +"%Y-%m-%d %H:%M:%S KST")
             git commit -m "$KST_DATE"
             echo "Changes committed with timestamp: $KST_DATE"
-            echo "changes_committed=true" >> $GITHUB_OUTPUT
+            echo "changes_committed=true" >> $GITHUB_ENV
           fi
+          
       - name: Push changes
-        if: steps.auto-commit.outputs.changes_committed == 'true'
+        if: env.changes_committed == 'true'
         run: |
           git push https://${{ github.actor }}:${{ secrets.GIT_TOKEN }}@github.com/${{ github.repository }}.git main
 
