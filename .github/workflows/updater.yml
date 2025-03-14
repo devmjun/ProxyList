@@ -85,6 +85,6 @@ jobs:
                -d text="❌ Proxy Updater 실행 실패! 로그를 확인하세요."
     env:
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-      TELEGRAM_CHAT_ID: ${{ secrets.GIT_EMAIL }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       SUCCESS_THREAD_ID: ${{ secrets.SUCCESS_THREAD_ID }}
       ERRORS_THREAD_ID: ${{ secrets.ERRORS_THREAD_ID }}
