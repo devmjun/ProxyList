@@ -13,6 +13,18 @@ on:
           - info
           - warning
           - debug
+
+env:
+  SCRIPT_URL: ${{ secrets.SCRIPT_URL }}
+  IS_LOCAL_ENV: "false"
+  GIT_EMAIL: ${{ secrets.GIT_EMAIL }}
+  GIT_NAME: ${{ secrets.GIT_NAME }}
+  GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+  TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+  SUCCESS_THREAD_ID: ${{ secrets.SUCCESS_THREAD_ID }}
+  ERRORS_THREAD_ID: ${{ secrets.ERRORS_THREAD_ID }}
+
 jobs:
   update-proxy:
     runs-on: ubuntu-latest
@@ -43,9 +55,6 @@ jobs:
           ./updater.sh
           PROTOCOL=${{ matrix.batch }} ./updater.sh
           rm -r *.sh 
-    env:
-      SCRIPT_URL: ${{ secrets.SCRIPT_URL }}
-      IS_LOCAL_ENV: "false"
 
   commit-and-push:
     needs: update-proxy
@@ -74,11 +83,6 @@ jobs:
         if: steps.auto-commit.outputs.changes_committed == 'true'
         run: |
           git push https://${{ github.actor }}:${{ secrets.GIT_TOKEN }}@github.com/${{ github.repository }}.git main
-    env:
-      GIT_EMAIL: ${{ secrets.GIT_EMAIL }}
-      GIT_NAME: ${{ secrets.GIT_NAME }}
-      GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
-
 
   send-telegram-message:
     needs: update-proxy
@@ -100,8 +104,3 @@ jobs:
                -d chat_id="$TELEGRAM_CHAT_ID" \
                -d message_thread_id="$ERRORS_THREAD_ID" \
                -d text="❌ Proxy Updater 실행 실패! 로그를 확인하세요."
-    env:
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-      SUCCESS_THREAD_ID: ${{ secrets.SUCCESS_THREAD_ID }}
-      ERRORS_THREAD_ID: ${{ secrets.ERRORS_THREAD_ID }}
