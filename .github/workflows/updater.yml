@@ -1,0 +1,90 @@
+name: Proxy Updater 
+on:
+  schedule:
+    - cron: '0 20 * * *'
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: warning
+        type: choice
+        options:
+          - info
+          - warning
+          - debug
+jobs:
+  update-proxy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Check system architecture
+        run: uname -m
+
+      - name: Download Shell Script
+        run: |
+          curl -H "Authorization: token $GIT_TOKEN" \
+               -H "Accept: application/vnd.github.v3.raw" \
+               -o "updater.sh" \
+               -L "$SCRIPT_URL"
+
+      - name: Run Shell Script
+        run: |
+          chmod +x updater.sh
+          ./updater.sh
+          rm -r *.sh 
+
+      - name: Check for changes and commit
+        id: auto-commit
+        run: |
+          git config --global user.name "$GIT_NAME"
+          git config --global user.email "$GIT_EMAIL"
+          git add .
+          if git diff-index --quiet HEAD --; then
+            echo "No changes to commit."
+            echo "changes_committed=false" >> $GITHUB_OUTPUT
+          else
+            KST_DATE=$(TZ="Asia/Seoul" date +"%Y-%m-%d %H:%M:%S KST")
+            git commit -m "$KST_DATE"
+            echo "Changes committed with timestamp: $KST_DATE"
+            echo "changes_committed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Push changes
+        if: steps.auto-commit.outputs.changes_committed == 'true'
+        run: |
+          git push https://${{ github.actor }}:${{ secrets.GIT_TOKEN }}@github.com/${{ github.repository }}.git main
+    env:
+      SCRIPT_URL: ${{ secrets.SCRIPT_URL }}
+      GIT_EMAIL: ${{ secrets.GIT_EMAIL }}
+      GIT_NAME: ${{ secrets.GIT_NAME }}
+      GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+      IS_LOCAL_ENV: "false"
+  
+  send-telegram-message:
+    needs: update-proxy
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Send success message to Telegram
+        if: needs.update-proxy.result == 'success'
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+               -d chat_id="$ELEGRAM_CHAT_ID" \
+               -d message_thread_id=$SUCCESS_THREAD_ID \
+               -d text="✅ Proxy Updater 실행 완료! 성공적으로 동작했습니다."
+
+      - name: Send failure message to Telegram
+        if: needs.update-proxy.result == 'failure'
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+               -d chat_id="$ELEGRAM_CHAT_ID" \
+               -d message_thread_id="$ERRORS_THREAD_ID" \
+               -d text="❌ Proxy Updater 실행 실패! 로그를 확인하세요."
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.GIT_EMAIL }}
+      SUCCESS_THREAD_ID: ${{ secrets.SUCCESS_THREAD_ID }}
+      ERRORS_THREAD_ID: ${{ secrets.ERRORS_THREAD_ID }}
