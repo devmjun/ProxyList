@@ -85,7 +85,7 @@ jobs:
           git push https://${{ github.actor }}:${{ secrets.GIT_TOKEN }}@github.com/${{ github.repository }}.git main
 
   send-telegram-message:
-    needs: update-proxy
+    needs: commit-and-push
     runs-on: ubuntu-latest
     if: always()
     steps:
