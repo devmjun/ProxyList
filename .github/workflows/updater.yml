@@ -82,7 +82,7 @@ jobs:
 
       - name: Move files to repository root
         run: |
-          mv artifacts/**/*.txt ./
+          mv -f artifacts/**/*.txt ./
 
 
       - name: Check for changes and commit
@@ -111,13 +111,6 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     steps:
-      - name: Save logs to a file
-        run: |
-          echo "GitHub Actions Run Log" > actions.log
-          echo "======================" >> actions.log
-          cat $GITHUB_ENV >> actions.log
-          cat $GITHUB_STEP_SUMMARY >> actions.log
-
       - name: Send success message to Telegram
         if: needs.update-proxy.result == 'success' && needs.commit-and-push.result == 'success'
         run: |
@@ -126,7 +119,6 @@ jobs:
                -d message_thread_id=$SUCCESS_THREAD_ID \
                -d parse_mode="HTML" \ 
                -d text="✅ Proxy Updater Success!"
-
 
       - name: Send failure message to Telegram
         if: needs.update-proxy.result == 'failure' || needs.commit-and-push.result == 'failure'
