@@ -28,7 +28,7 @@ env:
 concurrency:
   group: proxy-checker-${{ github.run_id }}
   cancel-in-progress: true 
-  
+
 jobs:
   update-proxy:
     runs-on: ubuntu-latest
@@ -66,8 +66,10 @@ jobs:
         with:
           name: proxy-files-${{ matrix.batch }}
           path: |
-            "*.txt"
+            "${{ matrix.batch }}.txt"
+            "working_proxies_${{ matrix.batch }}.txt"
             "LATEST_UPDATE"
+            "README.md"
 
   commit-and-push:
     needs: update-proxy
