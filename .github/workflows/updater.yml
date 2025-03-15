@@ -75,6 +75,8 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+          pattern: proxy-files-*
+          merge-multiple: true
       
       - name: List files in the artifacts directory
         run: |
@@ -82,7 +84,7 @@ jobs:
 
       - name: Move files to repository root
         run: |
-          mv -f artifacts/**/*.txt ./
+          mv -f artifacts/*.txt ./
 
 
       - name: Check for changes and commit
