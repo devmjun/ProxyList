@@ -25,6 +25,10 @@ env:
   SUCCESS_THREAD_ID: ${{ secrets.SUCCESS_THREAD_ID }}
   ERRORS_THREAD_ID: ${{ secrets.ERRORS_THREAD_ID }}
 
+concurrency:
+  group: proxy-checker-${{ github.run_id }}
+  cancel-in-progress: true 
+  
 jobs:
   update-proxy:
     runs-on: ubuntu-latest
