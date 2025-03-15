@@ -34,6 +34,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        id: checkout
 
       - name: Check system architecture
         run: uname -m
@@ -65,7 +66,7 @@ jobs:
   commit-and-push:
     needs: update-proxy
     runs-on: ubuntu-latest
-    if: always() # always run after the matrix is done
+    if: always() 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -73,7 +74,12 @@ jobs:
       - name: Restore all generated files
         uses: actions/download-artifact@v4
         with:
-          pattern: "proxy-files-*"
+          path: artifacts
+
+      - name: Move files to repository root
+        run: |
+          mv artifacts/*.txt ./
+
 
       - name: Check for changes and commit
         id: auto-commit
@@ -101,18 +107,25 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     steps:
+      - name: Save logs to a file
+        run: |
+          echo "GitHub Actions Run Log" > actions.log
+          echo "======================" >> actions.log
+          cat $GITHUB_ENV >> actions.log
+          cat $GITHUB_STEP_SUMMARY >> actions.log
+
       - name: Send success message to Telegram
-        if: needs.update-proxy.result == 'success'
+        if: needs.update-proxy.result == 'success' && needs.commit-and-push.result == 'success'
         run: |
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
                -d chat_id="$TELEGRAM_CHAT_ID" \
                -d message_thread_id=$SUCCESS_THREAD_ID \
-               -d text="✅ Proxy Updater 실행 완료! 성공적으로 동작했습니다."
+               -d text="✅ Proxy Updater Success!.\n\nLogs..:\n$(cat actions.log)"
 
       - name: Send failure message to Telegram
-        if: needs.update-proxy.result == 'failure'
+        if: needs.update-proxy.result == 'failure' || needs.commit-and-push.result == 'failure'
         run: |
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
                -d chat_id="$TELEGRAM_CHAT_ID" \
                -d message_thread_id="$ERRORS_THREAD_ID" \
-               -d text="❌ Proxy Updater 실행 실패! 로그를 확인하세요."
+               -d text="❌ Proxy Updater 실행 실패! 로그를 확인하세요.\n\n로그..:\n$(cat actions.log)"
