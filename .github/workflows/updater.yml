@@ -121,7 +121,7 @@ jobs:
                -d chat_id="$TELEGRAM_CHAT_ID" \
                -d message_thread_id=$SUCCESS_THREAD_ID \
                -d parse_mode="HTML" \ 
-               -d text="✅ Proxy Updater Success!"
+               -d text="$(echo -e '✅ Proxy Updater Success!')"
 
       - name: Send failure message to Telegram
         if: needs.update-proxy.result == 'failure' || needs.commit-and-push.result == 'failure'
@@ -130,4 +130,4 @@ jobs:
                -d chat_id="$TELEGRAM_CHAT_ID" \
                -d parse_mode="HTML" \
                -d message_thread_id="$ERRORS_THREAD_ID" \
-               -d text="❌ Proxy Updater Failure!.\n\Check Logs..:\n"
+               -d text="$(echo -e '❌ Proxy Updater Failure!\n\nCheck Logs..')"
