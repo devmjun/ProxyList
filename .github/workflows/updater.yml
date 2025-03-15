@@ -75,6 +75,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+      
+      - name: List files in the artifacts directory
+        run: |
+          ls -al artifacts/
+      
+      - name: Extract downloaded artifacts
+        run: |
+          unzip artifacts/*.zip -d artifacts/
 
       - name: Move files to repository root
         run: |
@@ -120,12 +128,15 @@ jobs:
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
                -d chat_id="$TELEGRAM_CHAT_ID" \
                -d message_thread_id=$SUCCESS_THREAD_ID \
-               -d text="✅ Proxy Updater Success!.\n\nLogs..:\n$(cat actions.log)"
+               -d parse_mode="HTML" \ 
+               -d text="✅ Proxy Updater Success!"
+
 
       - name: Send failure message to Telegram
         if: needs.update-proxy.result == 'failure' || needs.commit-and-push.result == 'failure'
         run: |
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
                -d chat_id="$TELEGRAM_CHAT_ID" \
+               -d parse_mode="HTML" \ 
                -d message_thread_id="$ERRORS_THREAD_ID" \
-               -d text="❌ Proxy Updater 실행 실패! 로그를 확인하세요.\n\n로그..:\n$(cat actions.log)"
+               -d text="❌ Proxy Updater Failure!.\n\Check Logs..:\n"
