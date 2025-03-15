@@ -86,7 +86,6 @@ jobs:
         run: |
           mv -f artifacts/*.txt ./
 
-
       - name: Check for changes and commit
         id: auto-commit
         run: |
@@ -104,9 +103,11 @@ jobs:
           fi
 
       - name: Push changes
-        if: env.changes_committed == 'true'
-        run: |
-          git push https://${{ github.actor }}:${{ secrets.GIT_TOKEN }}@github.com/${{ github.repository }}.git main
+        uses: ad-m/github-push-action@v0.8.0
+        with:
+          github_token: $GIT_TOKEN
+          branch: main
+
 
   send-telegram-message:
     needs: commit-and-push
