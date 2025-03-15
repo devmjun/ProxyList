@@ -79,14 +79,10 @@ jobs:
       - name: List files in the artifacts directory
         run: |
           ls -al artifacts/
-      
-      - name: Extract downloaded artifacts
-        run: |
-          unzip artifacts/*.zip -d artifacts/
 
       - name: Move files to repository root
         run: |
-          mv artifacts/*.txt ./
+          mv artifacts/**/*.txt ./
 
 
       - name: Check for changes and commit
