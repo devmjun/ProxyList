@@ -1,7 +1,7 @@
 name: Proxy Updater 
 on:
   schedule:
-    - cron: '0 20 * * *'
+    - cron: '0 */12 * * *'
   workflow_dispatch:
     inputs:
       logLevel:
@@ -120,7 +120,7 @@ jobs:
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
                -d chat_id="$TELEGRAM_CHAT_ID" \
                -d message_thread_id=$SUCCESS_THREAD_ID \
-               -d parse_mode="HTML" \ 
+               -d parse_mode="HTML" \
                -d text="$(echo -e '✅ Proxy Updater Success!')"
 
       - name: Send failure message to Telegram
